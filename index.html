@@ -232,8 +232,13 @@
       };
 
       const renderRegisterView = () => {
+        // เช็คสถานะว่าคนสมัครเต็มหรือยัง
+        const isFull = currentTotal >= targetTotal;
+
         const handleSubmit = async (e) => {
           e.preventDefault();
+          if (isFull) return; // ป้องกันการส่งข้อมูลถ้าเต็มแล้ว
+
           const formElements = e.target.elements;
           const formData = {
             prefix: formElements.prefix.value, firstName: formElements.firstName.value.trim(), lastName: formElements.lastName.value.trim(),
@@ -250,36 +255,58 @@
           setIsProcessing(false);
         };
 
+        // คลาส CSS สำหรับช่องกรอกข้อมูลที่เปลี่ยนสถานะเมื่อถูก Disable
+        const inputClass = `w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-4 transition-all disabled:opacity-60 disabled:bg-gray-200 disabled:cursor-not-allowed`;
+
         return (
           <div className="max-w-4xl mx-auto px-4 animate-fade-in">
             <button onClick={() => setCurrentView('home')} className="mb-6 text-orange-600 font-semibold flex items-center gap-2 hover:bg-orange-100 px-5 py-2.5 rounded-xl transition-all hover:-translate-x-1"><span className="text-xl">⬅️</span> กลับหน้าหลัก</button>
             <div className="bg-white rounded-[2rem] shadow-xl shadow-orange-500/10 border border-orange-50 overflow-hidden">
               <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white p-8 text-center relative overflow-hidden"><h2 className="text-3xl font-extrabold mb-2 drop-shadow-md relative z-10">📝 ฟอร์มลงทะเบียนเข้ารับการอบรม</h2><p className="text-orange-50 font-medium relative z-10">กรุณากรอกข้อมูลให้ครบถ้วนเพื่อประโยชน์ในการจัดทำเกียรติบัตร</p></div>
+              
+              {/* ป้ายแจ้งเตือนเมื่อเต็ม */}
+              {isFull && (
+                <div className="bg-rose-100 text-rose-600 p-4 mx-6 mt-6 md:mx-10 rounded-xl text-center font-bold text-lg border border-rose-200 animate-pulse">
+                   ⚠️ ขออภัย ขณะนี้มีผู้ลงทะเบียนเต็มจำนวนที่กำหนดไว้แล้ว ({targetTotal} คน)
+                </div>
+              )}
+
               <form className="p-6 md:p-10 space-y-8" onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="col-span-1"><label className="block text-gray-700 font-bold mb-3">👤 คำนำหน้า <span className="text-rose-500">*</span></label><select name="prefix" className="w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-4 transition-all" required><option value="">-- เลือก --</option><option value="นาย">นาย</option><option value="นาง">นาง</option><option value="นางสาว">นางสาว</option></select></div>
-                  <div className="col-span-1 md:col-span-1"><label className="block text-gray-700 font-bold mb-3">ชื่อ <span className="text-rose-500">*</span></label><input type="text" name="firstName" className="w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-4 transition-all" placeholder="ไม่ต้องใส่คำนำหน้า" required /></div>
-                  <div className="col-span-1 md:col-span-1"><label className="block text-gray-700 font-bold mb-3">นามสกุล <span className="text-rose-500">*</span></label><input type="text" name="lastName" className="w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-4 transition-all" required /></div>
+                  <div className="col-span-1"><label className="block text-gray-700 font-bold mb-3">👤 คำนำหน้า <span className="text-rose-500">*</span></label><select name="prefix" disabled={isFull} className={inputClass} required><option value="">-- เลือก --</option><option value="นาย">นาย</option><option value="นาง">นาง</option><option value="นางสาว">นางสาว</option></select></div>
+                  <div className="col-span-1 md:col-span-1"><label className="block text-gray-700 font-bold mb-3">ชื่อ <span className="text-rose-500">*</span></label><input type="text" name="firstName" disabled={isFull} className={inputClass} placeholder="ไม่ต้องใส่คำนำหน้า" required /></div>
+                  <div className="col-span-1 md:col-span-1"><label className="block text-gray-700 font-bold mb-3">นามสกุล <span className="text-rose-500">*</span></label><input type="text" name="lastName" disabled={isFull} className={inputClass} required /></div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div><label className="block text-gray-700 font-bold mb-3">💼 ตำแหน่ง <span className="text-rose-500">*</span></label><select name="position" className="w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-4 transition-all" required><option value="">-- เลือกตำแหน่ง --</option><option value="ครูผู้ช่วย">ครูผู้ช่วย</option><option value="ครู">ครู</option></select></div>
-                  <div><label className="block text-gray-700 font-bold mb-3">🏅 วิทยฐานะ <span className="text-rose-500">*</span></label><select name="level" className="w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-4 transition-all" required><option value="">-- เลือกวิทยฐานะ --</option><option value="ไม่มี">ไม่มีวิทยฐานะ</option><option value="ชำนาญการ">ชำนาญการ</option><option value="ชำนาญการพิเศษ">ชำนาญการพิเศษ</option><option value="เชี่ยวชาญ">เชี่ยวชาญ</option></select></div>
+                  <div><label className="block text-gray-700 font-bold mb-3">💼 ตำแหน่ง <span className="text-rose-500">*</span></label><select name="position" disabled={isFull} className={inputClass} required><option value="">-- เลือกตำแหน่ง --</option><option value="ครูผู้ช่วย">ครูผู้ช่วย</option><option value="ครู">ครู</option></select></div>
+                  <div><label className="block text-gray-700 font-bold mb-3">🏅 วิทยฐานะ <span className="text-rose-500">*</span></label><select name="level" disabled={isFull} className={inputClass} required><option value="">-- เลือกวิทยฐานะ --</option><option value="ไม่มี">ไม่มีวิทยฐานะ</option><option value="ชำนาญการ">ชำนาญการ</option><option value="ชำนาญการพิเศษ">ชำนาญการพิเศษ</option><option value="เชี่ยวชาญ">เชี่ยวชาญ</option></select></div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-gray-700 font-bold mb-3">🏫 โรงเรียน <span className="text-rose-500">*</span></label>
-                    {/* เปลี่ยนเป็น Dropdown (Select) */}
-                    <select name="school" className="w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-4 transition-all" required>
+                    <select name="school" disabled={isFull} className={inputClass} required>
                       <option value="">-- เลือกโรงเรียน --</option>
                       {schoolList.map((school, index) => (
                         <option key={index} value={school}>{school}</option>
                       ))}
                     </select>
                   </div>
-                  <div><label className="block text-gray-700 font-bold mb-3">🌐 เครือข่ายการศึกษา <span className="text-rose-500">*</span></label><select name="network" className="w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-4 transition-all" required><option value="">-- เลือกเครือข่าย --</option><option value="กรมหลวงชุมพรฯ">กรมหลวงชุมพรฯ</option><option value="แกลงบูรพา">แกลงบูรพา</option><option value="เขาชะเมา">เขาชะเมา</option><option value="วังจันทร์">วังจันทร์</option><option value="สุนทรภู่">สุนทรภู่</option><option value="อริยมงคล">อริยมงคล</option></select></div>
+                  <div><label className="block text-gray-700 font-bold mb-3">🌐 เครือข่ายการศึกษา <span className="text-rose-500">*</span></label><select name="network" disabled={isFull} className={inputClass} required><option value="">-- เลือกเครือข่าย --</option><option value="กรมหลวงชุมพรฯ">กรมหลวงชุมพรฯ</option><option value="แกลงบูรพา">แกลงบูรพา</option><option value="เขาชะเมา">เขาชะเมา</option><option value="วังจันทร์">วังจันทร์</option><option value="สุนทรภู่">สุนทรภู่</option><option value="อริยมงคล">อริยมงคล</option></select></div>
                 </div>
-                <div><label className="block text-gray-700 font-bold mb-3">📱 เบอร์โทรศัพท์ <span className="text-rose-500">*</span></label><input type="tel" name="phone" maxLength="10" className="w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-4 transition-all" placeholder="08XXXXXXXX" required /></div>
-                <div className="pt-6"><button type="submit" className="w-full bg-gradient-to-r from-orange-500 via-rose-500 to-pink-500 hover:from-orange-600 hover:-translate-y-1 text-white font-extrabold text-xl py-5 rounded-2xl shadow-xl transition-all"><span className="relative z-10">✅ ยืนยันการลงทะเบียนอบรม</span></button></div>
+                <div><label className="block text-gray-700 font-bold mb-3">📱 เบอร์โทรศัพท์ <span className="text-rose-500">*</span></label><input type="tel" name="phone" disabled={isFull} maxLength="10" className={inputClass} placeholder="08XXXXXXXX" required /></div>
+                <div className="pt-6">
+                  <button 
+                    type="submit" 
+                    disabled={isFull || isProcessing}
+                    className={`w-full font-extrabold text-xl py-5 rounded-2xl shadow-xl transition-all relative overflow-hidden group ${
+                      isFull 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+                        : 'bg-gradient-to-r from-orange-500 via-rose-500 to-pink-500 hover:from-orange-600 hover:-translate-y-1 text-white'
+                    }`}
+                  >
+                    <span className="relative z-10">{isFull ? '❌ เต็มจำนวนแล้ว' : '✅ ยืนยันการลงทะเบียนอบรม'}</span>
+                  </button>
+                </div>
               </form>
             </div>
           </div>
