@@ -38,7 +38,7 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // 🔥 นำ URL ของ Google Apps Script (GAS) มาใส่ตรงนี้ 🔥
+    // 🔥 URL ของ Google Apps Script (GAS) งาน AI 🔥
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxfOerUVHvZgdLHY7I5wMI6la9zA4PdmP_UGsXp8sh3hLPxxnyuxpXHsBess-CUucdU/exec"; 
 
     // รายชื่อโรงเรียน 86 แห่ง
@@ -232,12 +232,13 @@
       };
 
       const renderRegisterView = () => {
-        // เช็คสถานะว่าคนสมัครเต็มหรือยัง
-        const isFull = currentTotal >= targetTotal;
+        // 🔥 เปลี่ยนแปลงตรงนี้: เช็คว่าเต็มแล้ว หรือ เช็คจาก Sheet ว่าปิด Manual หรือไม่
+        const isManualClosed = settings?.systemStatus?.toLowerCase() !== 'open';
+        const isFull = currentTotal >= targetTotal || isManualClosed;
 
         const handleSubmit = async (e) => {
           e.preventDefault();
-          if (isFull) return; // ป้องกันการส่งข้อมูลถ้าเต็มแล้ว
+          if (isFull) return; // ป้องกันการส่งข้อมูลถ้าเต็มหรือโดนปิดระบบไปแล้ว
 
           const formElements = e.target.elements;
           const formData = {
@@ -255,7 +256,6 @@
           setIsProcessing(false);
         };
 
-        // คลาส CSS สำหรับช่องกรอกข้อมูลที่เปลี่ยนสถานะเมื่อถูก Disable
         const inputClass = `w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-4 transition-all disabled:opacity-60 disabled:bg-gray-200 disabled:cursor-not-allowed`;
 
         return (
@@ -264,10 +264,10 @@
             <div className="bg-white rounded-[2rem] shadow-xl shadow-orange-500/10 border border-orange-50 overflow-hidden">
               <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white p-8 text-center relative overflow-hidden"><h2 className="text-3xl font-extrabold mb-2 drop-shadow-md relative z-10">📝 ฟอร์มลงทะเบียนเข้ารับการอบรม</h2><p className="text-orange-50 font-medium relative z-10">กรุณากรอกข้อมูลให้ครบถ้วนเพื่อประโยชน์ในการจัดทำเกียรติบัตร</p></div>
               
-              {/* ป้ายแจ้งเตือนเมื่อเต็ม */}
+              {/* ป้ายแจ้งเตือนเมื่อเต็ม หรือ สั่งปิดระบบ */}
               {isFull && (
                 <div className="bg-rose-100 text-rose-600 p-4 mx-6 mt-6 md:mx-10 rounded-xl text-center font-bold text-lg border border-rose-200 animate-pulse">
-                   ⚠️ ขออภัย ขณะนี้มีผู้ลงทะเบียนเต็มจำนวนที่กำหนดไว้แล้ว ({targetTotal} คน)
+                   ⚠️ {isManualClosed ? 'ขออภัย ขณะนี้ระบบได้ปิดรับการลงทะเบียนแล้ว' : `ขออภัย ขณะนี้มีผู้ลงทะเบียนเต็มจำนวนที่กำหนดไว้แล้ว (${targetTotal} คน)`}
                 </div>
               )}
 
@@ -304,7 +304,7 @@
                         : 'bg-gradient-to-r from-orange-500 via-rose-500 to-pink-500 hover:from-orange-600 hover:-translate-y-1 text-white'
                     }`}
                   >
-                    <span className="relative z-10">{isFull ? '❌ เต็มจำนวนแล้ว' : '✅ ยืนยันการลงทะเบียนอบรม'}</span>
+                    <span className="relative z-10">{isFull ? (isManualClosed ? '❌ ปิดรับลงทะเบียน' : '❌ เต็มจำนวนแล้ว') : '✅ ยืนยันการลงทะเบียนอบรม'}</span>
                   </button>
                 </div>
               </form>
@@ -349,7 +349,6 @@
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-gray-700 font-bold mb-3">🏫 โรงเรียน <span className="text-rose-500">*</span></label>
-                    {/* เปลี่ยนเป็น Dropdown (Select) */}
                     <select name="school" defaultValue={editingItem.school} className="w-full border-2 border-gray-100 bg-gray-50/50 rounded-2xl p-4" required>
                       <option value="">-- เลือกโรงเรียน --</option>
                       {schoolList.map((school, index) => (
